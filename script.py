@@ -2,12 +2,42 @@ from pathlib import Path
 import os
 import json
 import hashlib
+import shutil
 
 class SyncHandler:
     src_folder = Path.cwd()
     dst_folder = Path.cwd()
     
     file_hash_src = []
+    
+    def __init__(self) -> None:
+        self._load_configs()
+        self.main_loop()
+        pass
+    
+    def main_loop(self):
+        while(True):
+            print("[0] - exit")
+            print("[1] - list files")
+            print("[2] - compare files")
+            print("[3] - copy files to destination")
+            
+            my_choice = int(input("Choose [0-3]: "))
+            
+            match my_choice:
+                case 0:
+                    break
+                case 1:
+                    self.list_files()
+                case 2:
+                    self.compare_files()
+                case 3:
+                    self.copy_files_to_dest()
+                case _:
+                    print("ERROR: wrong number chosen!")
+                    
+                    
+            print("===============\n\n")
     
     def _load_configs(self):
         try:
@@ -82,12 +112,17 @@ class SyncHandler:
                 if_hash_equal = True if file_hash_src[el.name].digest() == file_hash_dst[el.name].digest() else False
                 print("{0: <20} | {1: >32} | {3: =5} | {2: >32}".format(str(el.name), file_hash_src[el.name].hexdigest(), file_hash_dst[el.name].hexdigest(), if_hash_equal))
             
+    def copy_files_to_dest(self):
+        for file in self.src_folder.iterdir():
+            file_dest = open(Path(self.dst_folder, file.name), "wb")
+            file_orig = open(file, "rb")
+            
+            shutil.copyfileobj(file_orig, file_dest)
+            
+            file_orig.close()
+            file_dest.close()
+            print("INFO: copied file:", file.name)
+            
 # ------------------
 
 my_handler = SyncHandler()
-
-my_handler._load_configs()
-
-my_handler.list_files()
-
-my_handler.compare_files()
