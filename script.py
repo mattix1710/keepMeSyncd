@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime
 import os
 import json
 import hashlib
@@ -21,6 +22,7 @@ class SyncHandler:
             print("[1] - list files")
             print("[2] - compare files")
             print("[3] - copy files to destination")
+            print("[4] - copy files and backup old ones")
             
             my_choice = int(input("Choose [0-3]: "))
             
@@ -33,6 +35,8 @@ class SyncHandler:
                     self.compare_files()
                 case 3:
                     self.copy_files_to_dest()
+                case 4:
+                    self.copy_and_backup()
                 case _:
                     print("ERROR: wrong number chosen!")
                     
@@ -114,7 +118,9 @@ class SyncHandler:
             
     def copy_files_to_dest(self):
         for file in self.src_folder.iterdir():
-            file_dest = open(Path(self.dst_folder, file.name), "wb")
+            path_dst = Path(self.dst_folder, file.name)
+            
+            file_dest = open(path_dst, "wb")
             file_orig = open(file, "rb")
             
             shutil.copyfileobj(file_orig, file_dest)
@@ -122,6 +128,21 @@ class SyncHandler:
             file_orig.close()
             file_dest.close()
             print("INFO: copied file:", file.name)
+    
+    def copy_and_backup(self):
+        for file in self.src_folder.iterdir():
+            path_dst = Path(self.dst_folder, file.name)
+            if path_dst.exists():
+                os.replace(path_dst, Path(self.dst_folder, file.name + ".{}.bak".format(datetime.today().strftime('%H%M%S_%d%m%Y'))))
+            
+            file_dest = open(path_dst, "wb")
+            file_orig = open(file, "rb")
+            
+            shutil.copyfileobj(file_orig, file_dest)
+            
+            file_orig.close()
+            file_dest.close()
+            print("INFO: copied and backed-up file:", file.name)
             
 # ------------------
 
